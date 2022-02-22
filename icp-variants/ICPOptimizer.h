@@ -93,7 +93,36 @@ public:
     void setConvergenceMeasure(ConvergenceMeasure& convergenMearsure) {
         m_convergenceMeasure = &convergenMearsure;
     }
-    
+
+    void writeConfigToFile(std::string fileName, std::string extra="", bool verbose=FALSE) {
+
+        std::ofstream file;
+
+        file.open(fileName, std::ios_base::app);
+        
+        auto t = std::time(nullptr);
+        auto tm = *std::localtime(&t);
+
+        std::ostringstream oss;
+        oss <<
+            std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << ", " <<
+            selectionMethod << ", " <<
+            matchingMethod << ", " <<
+            weightingMethod << ", " <<
+            rejectionMethod << ", " <<
+            metric << ", " <<
+            colorICP << ", " <<
+            multiResolutionICP << ", " <<
+            extra << std::endl;
+
+        auto out = oss.str();
+
+        if (verbose) std::cout << out;
+        
+        file << out;
+        file.close();
+    }
+
     void printICPConfiguration(){
         std::cout << "\n\n*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\n";
         std::cout << "Starting ICP with the following configuration:\n";

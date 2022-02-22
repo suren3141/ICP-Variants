@@ -35,6 +35,7 @@
 Libs
 icp-variants/Build
 icp-variants/build
+icp-variants/out
 icp-variants/realease
 icp-variants/CMakeSettings.json
 .vs
@@ -53,3 +54,5 @@ Data/apartment_local.csv
 Data/apartment_global.csv
 Data/pose_scanner_leica.csv
 Data/rgbd_dataset_freiburg1_xyz/*
+
+Docs

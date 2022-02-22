@@ -19,26 +19,27 @@
 
 #define SHOW_BUNNY_CORRESPONDENCES 1
 
-#define MATCHING_METHOD      0 // 1 -> projective, 0 -> knn. Run projective with sequence_icp 
 #define SELECTION_METHOD     0 // 0 -> all, 1 -> random
-#define WEIGHTING_METHOD     0 // 0 -> constant, 1 -> point distances, 2 -> normals, 3 -> colors
+#define MATCHING_METHOD      0 // 1 -> projective, 0 -> knn. Run projective with sequence_icp 
+#define WEIGHTING_METHOD     1 // 0 -> constant, 1 -> point distances, 2 -> normals, 3 -> colors
+#define REJECTION_METHOD     1 // 0 -> None, 1 -> angle of normals
 
-#define USE_LINEAR_ICP		0 // 0 -> non-linear optimization. 1 -> linear
+#define USE_LINEAR_ICP		1 // 0 -> non-linear optimization. 1 -> linear
 
 #define USE_MULTI_RESOLUTION 1 // 1-> enable 
 
 // Set metric - Enable only one //
-#define USE_POINT_TO_PLANE	0 
-#define USE_POINT_TO_POINT	1 
-#define USE_SYMMETRIC	    0
+#define USE_POINT_TO_PLANE	0
+#define USE_POINT_TO_POINT	0
+#define USE_SYMMETRIC	    1
 
 // Add color to knn             //
 // Works with all error metrics // 
 #define USE_COLOR_ICP        0 // Enable sequence icp, else it is not used
 
-#define RUN_SHAPE_ICP		0 // 0 -> disable. 1 -> enable. Can all be set to 1.
+#define RUN_SHAPE_ICP		1 // 0 -> disable. 1 -> enable. Can all be set to 1.
 #define RUN_SEQUENCE_ICP    0
-#define RUN_ETH_ICP		    1
+#define RUN_ETH_ICP		    0
 
 int alignBunnyWithICP() {
 	// Load the source and target mesh.
@@ -93,6 +94,15 @@ int alignBunnyWithICP() {
     else{
         optimizer->setWeightingMethod(CONSTANT_WEIGHTING);
     }
+
+	// 4. Set rejection method //
+	if (REJECTION_METHOD) {
+		optimizer->setRejectionMethod(REJECTION_METHOD);
+	}
+	else {
+		optimizer->setRejectionMethod(REJECTION_METHOD);
+	}
+
 
     if(USE_MULTI_RESOLUTION)
         optimizer->enableMultiResolution(true);
@@ -174,6 +184,10 @@ int alignBunnyWithICP() {
 
     // saving iteration errors to file //
     convergenMearsure.writeRMSEToFile("RMSE.txt");
+
+	std::string extra = std::to_string(USE_LINEAR_ICP) + ", " + std::to_string(timeMeasure.convergenceTime) + ", " + std::to_string(alignmentError);
+
+	optimizer->writeConfigToFile("bunny.txt", extra, TRUE);
 
 	delete optimizer;
 

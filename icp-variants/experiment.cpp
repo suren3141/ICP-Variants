@@ -19,11 +19,12 @@
 
 #define SHOW_BUNNY_CORRESPONDENCES 1
 
-int alignBunnyWithICP(unsigned useLinear, unsigned useMetric, unsigned matchingMethod, unsigned selectionMethod, unsigned weightingMethod, 
-		unsigned useMultiresolution, unsigned numIterations=20, float maxMatchingDist=0.01f, float samplingProba=0.5f, std::string expName="bunny") {
+int alignBunnyWithICP(unsigned useLinear, unsigned useMetric, unsigned matchingMethod, unsigned selectionMethod, unsigned weightingMethod, unsigned rejectionMethod,
+	unsigned useMultiresolution, unsigned numIterations=20, float maxMatchingDist=0.01f, float samplingProba=0.5f, std::string expName="bunny") {
     // ASSERT arguments
-	printf("Running Bunny ICP with useLinear %d, useMetric %d, matchingMethod %d, selectionMethod %d, weightingMethod %d, useMultiresolution %d, numIterations %d, maxMatchingDist %f, samplingProba %f, expName %s.\n", 
-			useLinear , useMetric , matchingMethod , selectionMethod , weightingMethod , useMultiresolution , numIterations , maxMatchingDist, samplingProba, expName.c_str());
+	printf("Running Bunny ICP with useLinear %d, useMetric %d, matchingMethod %d, selectionMethod %d, weightingMethod %d, useMultiresolution %d, numIterations %d, maxMatchingDist %f, samplingProba %f\n",
+		useLinear, useMetric, matchingMethod, selectionMethod, weightingMethod, rejectionMethod, useMultiresolution, numIterations, maxMatchingDist, samplingProba);
+	//printf("Running Bunny ICP with useLinear %d, useMetric %d, matchingMethod %d, selectionMethod %d, weightingMethod %d, useMultiresolution %d, numIterations %d, maxMatchingDist %f, samplingProba %f, expName %s.\n",		useLinear, useMetric, matchingMethod, selectionMethod, weightingMethod, rejectionMethod, useMultiresolution, numIterations, maxMatchingDist, samplingProba, expName.c_str());
 	// ASSERT(useLinear < 2 &&  useMetric < 3 && matchingMethod < 2  && selectionMethod < 2  && weightingMethod < 4  && useMultiresolution < 2  && "Config unsupported.");
 
 	// Load the source and target mesh.
@@ -52,6 +53,10 @@ int alignBunnyWithICP(unsigned useLinear, unsigned useMetric, unsigned matchingM
 
     // 3. Set weighting method //
     optimizer->setWeightingMethod(weightingMethod);
+
+	// 4. Set rejection method //
+	optimizer->setRejectionMethod(rejectionMethod);
+
 
     if(useMultiresolution)
         optimizer->enableMultiResolution(true);
@@ -135,6 +140,10 @@ int alignBunnyWithICP(unsigned useLinear, unsigned useMetric, unsigned matchingM
     // saving iteration errors to file //
     convergenMearsure.writeRMSEToFile(expName + std::string("_RMSE.txt"));
 
+	std::string extra = std::to_string(useLinear) + ", " + std::to_string(timeMeasure.convergenceTime) + ", " + std::to_string(alignmentError);
+
+	optimizer->writeConfigToFile("bunny.txt", extra, TRUE);
+
 	delete optimizer;
 
 	return 0;
@@ -143,7 +152,7 @@ int alignBunnyWithICP(unsigned useLinear, unsigned useMetric, unsigned matchingM
 int reconstructRoom(unsigned useLinear, unsigned useMetric, unsigned matchingMethod, unsigned selectionMethod, unsigned weightingMethod, 
         unsigned useMultiresolution, unsigned numIterations=20, float maxMatchingDist=0.01f, float samplingProba=0.5f, std::string expName="room") {
 	printf("Running Room ICP with useLinear %d, useMetric %d, matchingMethod %d, selectionMethod %d, weightingMethod %d, useMultiresolution %d, numIterations %d, maxMatchingDist %f, samplingProba %f, expName %s.\n", 
-			useLinear , useMetric , matchingMethod , selectionMethod , weightingMethod , useMultiresolution , numIterations , maxMatchingDist, samplingProba, expName.c_str());
+			useLinear , useMetric , matchingMethod , selectionMethod , weightingMethod , useMultiresolution , numIterations , maxMatchingDist, samplingProba, expName);
 	// ASSERT arguments
 	// ASSERT(useLinear < 2 &&  useMetric <3 && matchingMethod <2  && selectionMethod < 2  && weightingMethod < 4  && useMultiresolution < 2  && samplingProba <= 1 && "Config not supported.");
 
@@ -412,7 +421,8 @@ int alignETH(unsigned useLinear, unsigned useMetric, unsigned matchingMethod, un
 }
 
 int main(int argc, char *argv[]) {
-    std::string filename = "experiment.csv";
+	std::cout << "Running experiments" << std::endl;
+    std::string filename = "bunny_experiments.csv";
 	if (argc >=2)
     	filename = argv[1]; // default experiment.
 
@@ -430,14 +440,17 @@ int main(int argc, char *argv[]) {
         unsigned matchingMethod = atoi(cf[4].c_str());
         unsigned selectionMethod = atoi(cf[5].c_str());
         unsigned weightingMethod = atoi(cf[6].c_str());
-        unsigned useMultiresolution = atoi(cf[7].c_str());
-        unsigned numIterations = atoi(cf[8].c_str()); 
-        float maxMatchingDist = atof(cf[9].c_str());
-        float samplingProba = atof(cf[10].c_str());
+		unsigned rejectionMethod = atoi(cf[7].c_str());
+		unsigned useMultiresolution = atoi(cf[8].c_str());
+        unsigned numIterations = atoi(cf[9].c_str()); 
+        float maxMatchingDist = atof(cf[10].c_str());
+        float samplingProba = atof(cf[11].c_str());
         std::cout << "\n*****Running experiment: " << expName << "\n";
-        if (expType == "bunny")
-            result += alignBunnyWithICP(useLinear, useMetric, matchingMethod, selectionMethod, 
-                    weightingMethod, useMultiresolution, numIterations, maxMatchingDist, samplingProba, expName);
+		if (expType == "bunny") {
+			std::cout << "bunnyyyy" << expName << " " << expType << " " << useLinear << " " << useMetric << " " << matchingMethod << " " << selectionMethod << " " << weightingMethod << " " << rejectionMethod << " " << useMultiresolution << " " << numIterations << " " << maxMatchingDist << " " << samplingProba  << std::endl;
+			result += alignBunnyWithICP(useLinear, useMetric, matchingMethod, selectionMethod,
+				weightingMethod, rejectionMethod, useMultiresolution, numIterations, maxMatchingDist, samplingProba, expName);
+		}
         else if (expType == "room")
             result += reconstructRoom(useLinear, useMetric, matchingMethod, selectionMethod, 
                     weightingMethod, useMultiresolution, numIterations, maxMatchingDist, samplingProba, expName);
